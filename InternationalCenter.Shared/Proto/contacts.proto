@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package international_center.contacts;
+
+option csharp_namespace = "InternationalCenter.Shared.Proto.Contacts";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "Proto/common.proto";
+
+// Contact message
+message Contact {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+  string subject = 5;
+  string message = 6;
+  string status = 7;
+  string type = 8;
+  string source = 9;
+  bool is_urgent = 10;
+  google.protobuf.Timestamp response_sent_at = 11;
+  string responded_by = 12;
+  string metadata = 13; // JSON metadata
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+}
+
+// Request messages
+message CreateContactRequest {
+  string name = 1;
+  string email = 2;
+  string phone = 3;
+  string subject = 4;
+  string message = 5;
+  string type = 6;
+  string source = 7;
+  bool is_urgent = 8;
+}
+
+message GetContactsRequest {
+  international_center.common.PaginationRequest pagination = 1;
+  ContactFilter filter = 2;
+  international_center.common.SortOptions sort = 3;
+}
+
+message GetContactByIdRequest {
+  string id = 1;
+}
+
+message UpdateContactStatusRequest {
+  string id = 1;
+  string status = 2;
+  google.protobuf.StringValue responded_by = 3;
+}
+
+message GetContactStatsRequest {
+  google.protobuf.Timestamp from_date = 1;
+  google.protobuf.Timestamp to_date = 2;
+}
+
+// Contact-specific filter
+message ContactFilter {
+  google.protobuf.StringValue status = 1;
+  google.protobuf.StringValue type = 2;
+  google.protobuf.StringValue source = 3;
+  google.protobuf.BoolValue is_urgent = 4;
+}
+
+// Contact statistics
+message ContactStats {
+  int64 total_contacts = 1;
+  int64 new_contacts = 2;
+  int64 pending_contacts = 3;
+  int64 resolved_contacts = 4;
+  int64 urgent_contacts = 5;
+  map<string, int64> contacts_by_type = 6;
+  map<string, int64> contacts_by_source = 7;
+}
+
+// Response messages
+message CreateContactResponse {
+  Contact contact = 1;
+  international_center.common.OperationStatus status = 2;
+}
+
+message GetContactsResponse {
+  repeated Contact contacts = 1;
+  international_center.common.PaginationResponse pagination = 2;
+}
+
+message GetContactResponse {
+  Contact contact = 1;
+}
+
+message UpdateContactStatusResponse {
+  Contact contact = 1;
+  international_center.common.OperationStatus status = 2;
+}
+
+message GetContactStatsResponse {
+  ContactStats stats = 1;
+}
+
+// Contacts service definition
+service ContactsService {
+  // Create new contact submission
+  rpc CreateContact(CreateContactRequest) returns (CreateContactResponse);
+  
+  // Get paginated list of contacts with filtering
+  rpc GetContacts(GetContactsRequest) returns (GetContactsResponse);
+  
+  // Get contact by ID
+  rpc GetContactById(GetContactByIdRequest) returns (GetContactResponse);
+  
+  // Update contact status
+  rpc UpdateContactStatus(UpdateContactStatusRequest) returns (UpdateContactStatusResponse);
+  
+  // Get contact statistics
+  rpc GetContactStats(GetContactStatsRequest) returns (GetContactStatsResponse);
+  
+  // Stream new contacts for real-time notifications
+  rpc StreamNewContacts(international_center.common.HealthCheckRequest) returns (stream Contact);
+  
+  // Health check
+  rpc HealthCheck(international_center.common.HealthCheckRequest) returns (international_center.common.HealthCheckResponse);
+}

@@ -1,0 +1,240 @@
+syntax = "proto3";
+
+package international_center.events;
+
+option csharp_namespace = "InternationalCenter.Shared.Proto.Events";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "Proto/common.proto";
+
+// Event message
+message Event {
+  string id = 1;
+  string title = 2;
+  string slug = 3;
+  string description = 4;
+  string content = 5;
+  google.protobuf.Timestamp start_date = 6;
+  google.protobuf.Timestamp end_date = 7;
+  string location = 8;
+  string venue = 9;
+  string address = 10;
+  string city = 11;
+  string country = 12;
+  string timezone = 13;
+  bool is_virtual = 14;
+  string virtual_link = 15;
+  string event_type = 16;
+  string status = 17;
+  bool featured = 18;
+  string category = 19;
+  string organizer = 20;
+  string contact_email = 21;
+  string contact_phone = 22;
+  string website_url = 23;
+  string registration_url = 24;
+  google.protobuf.Timestamp registration_deadline = 25;
+  int32 max_capacity = 26;
+  int32 current_registrations = 27;
+  bool registration_required = 28;
+  bool is_free = 29;
+  string price_info = 30;
+  string image_url = 31;
+  repeated string tags = 32;
+  string meta_title = 33;
+  string meta_description = 34;
+  google.protobuf.Timestamp created_at = 35;
+  google.protobuf.Timestamp updated_at = 36;
+  string metadata = 37; // JSON metadata
+  EventCategory category_data = 38;
+  repeated EventSession sessions = 39;
+  repeated EventSpeaker speakers = 40;
+}
+
+// Event category message
+message EventCategory {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string slug = 4;
+  int32 display_order = 5;
+  bool active = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// Event session for multi-session events
+message EventSession {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  google.protobuf.Timestamp start_time = 4;
+  google.protobuf.Timestamp end_time = 5;
+  string location = 6;
+  string speaker_id = 7;
+  string speaker_name = 8;
+}
+
+// Event speaker
+message EventSpeaker {
+  string id = 1;
+  string name = 2;
+  string title = 3;
+  string bio = 4;
+  string image_url = 5;
+  string email = 6;
+  string linkedin_url = 7;
+  string twitter_url = 8;
+}
+
+// Request messages
+message GetEventsRequest {
+  international_center.common.PaginationRequest pagination = 1;
+  international_center.common.CategoryFilter filter = 2;
+  international_center.common.SortOptions sort = 3;
+  EventFilter event_filter = 4;
+}
+
+message GetEventBySlugRequest {
+  string slug = 1;
+}
+
+message SearchEventsRequest {
+  string query = 1;
+  international_center.common.PaginationRequest pagination = 2;
+  international_center.common.SortOptions sort = 3;
+  international_center.common.CategoryFilter filter = 4;
+  EventFilter event_filter = 5;
+}
+
+message GetEventCategoriesRequest {
+  bool active_only = 1;
+}
+
+message GetFeaturedEventsRequest {
+  google.protobuf.Int32Value limit = 1;
+}
+
+message GetUpcomingEventsRequest {
+  int32 limit = 1;
+  int32 days_ahead = 2;
+}
+
+message GetEventsByLocationRequest {
+  string location = 1;
+  international_center.common.PaginationRequest pagination = 2;
+}
+
+message GetEventsByDateRangeRequest {
+  google.protobuf.Timestamp start_date = 1;
+  google.protobuf.Timestamp end_date = 2;
+  international_center.common.PaginationRequest pagination = 3;
+}
+
+message RegisterForEventRequest {
+  string event_id = 1;
+  string participant_name = 2;
+  string participant_email = 3;
+  string participant_phone = 4;
+  string organization = 5;
+  repeated string custom_fields = 6;
+}
+
+// Event-specific filter
+message EventFilter {
+  google.protobuf.StringValue event_type = 1;
+  google.protobuf.StringValue location = 2;
+  google.protobuf.StringValue organizer = 3;
+  repeated string tags = 4;
+  google.protobuf.Timestamp from_date = 5;
+  google.protobuf.Timestamp to_date = 6;
+  google.protobuf.BoolValue is_virtual = 7;
+  google.protobuf.BoolValue is_free = 8;
+  google.protobuf.BoolValue registration_required = 9;
+  google.protobuf.BoolValue has_availability = 10;
+}
+
+// Response messages
+message GetEventsResponse {
+  repeated Event events = 1;
+  international_center.common.PaginationResponse pagination = 2;
+}
+
+message GetEventResponse {
+  Event event = 1;
+}
+
+message SearchEventsResponse {
+  repeated Event events = 1;
+  international_center.common.PaginationResponse pagination = 2;
+  string query = 3;
+}
+
+message GetEventCategoriesResponse {
+  repeated EventCategory categories = 1;
+}
+
+message GetFeaturedEventsResponse {
+  repeated Event events = 1;
+}
+
+message GetUpcomingEventsResponse {
+  repeated Event events = 1;
+}
+
+message GetEventsByLocationResponse {
+  repeated Event events = 1;
+  international_center.common.PaginationResponse pagination = 2;
+  string location = 3;
+}
+
+message GetEventsByDateRangeResponse {
+  repeated Event events = 1;
+  international_center.common.PaginationResponse pagination = 2;
+  google.protobuf.Timestamp start_date = 3;
+  google.protobuf.Timestamp end_date = 4;
+}
+
+message RegisterForEventResponse {
+  bool success = 1;
+  string registration_id = 2;
+  string message = 3;
+  google.protobuf.Timestamp registered_at = 4;
+}
+
+// Events service definition
+service EventsService {
+  // Get paginated list of events with filtering and sorting
+  rpc GetEvents(GetEventsRequest) returns (GetEventsResponse);
+  
+  // Get event by slug
+  rpc GetEventBySlug(GetEventBySlugRequest) returns (GetEventResponse);
+  
+  // Search events with full-text search
+  rpc SearchEvents(SearchEventsRequest) returns (SearchEventsResponse);
+  
+  // Get event categories
+  rpc GetEventCategories(GetEventCategoriesRequest) returns (GetEventCategoriesResponse);
+  
+  // Get featured events
+  rpc GetFeaturedEvents(GetFeaturedEventsRequest) returns (GetFeaturedEventsResponse);
+  
+  // Get upcoming events
+  rpc GetUpcomingEvents(GetUpcomingEventsRequest) returns (GetUpcomingEventsResponse);
+  
+  // Get events by location
+  rpc GetEventsByLocation(GetEventsByLocationRequest) returns (GetEventsByLocationResponse);
+  
+  // Get events by date range
+  rpc GetEventsByDateRange(GetEventsByDateRangeRequest) returns (GetEventsByDateRangeResponse);
+  
+  // Register for an event
+  rpc RegisterForEvent(RegisterForEventRequest) returns (RegisterForEventResponse);
+  
+  // Stream events for real-time updates
+  rpc StreamEvents(GetEventsRequest) returns (stream Event);
+  
+  // Health check
+  rpc HealthCheck(international_center.common.HealthCheckRequest) returns (international_center.common.HealthCheckResponse);
+}

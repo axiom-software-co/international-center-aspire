@@ -1,0 +1,174 @@
+syntax = "proto3";
+
+package international_center.research;
+
+option csharp_namespace = "InternationalCenter.Shared.Proto.Research";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "Proto/common.proto";
+
+// Research article message
+message ResearchArticle {
+  string id = 1;
+  string title = 2;
+  string slug = 3;
+  string abstract = 4;
+  string content = 5;
+  repeated string authors = 6;
+  string institution = 7;
+  google.protobuf.Timestamp published_date = 8;
+  string journal = 9;
+  string doi = 10;
+  repeated string keywords = 11;
+  string research_type = 12;
+  string status = 13;
+  bool featured = 14;
+  string category = 15;
+  string pdf_url = 16;
+  string image_url = 17;
+  string meta_title = 18;
+  string meta_description = 19;
+  google.protobuf.Timestamp created_at = 20;
+  google.protobuf.Timestamp updated_at = 21;
+  string metadata = 22; // JSON metadata
+  google.protobuf.StringValue search_vector = 23;
+  ResearchCategory category_data = 24;
+}
+
+// Research category message
+message ResearchCategory {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string slug = 4;
+  int32 display_order = 5;
+  bool active = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// Request messages
+message GetResearchArticlesRequest {
+  international_center.common.PaginationRequest pagination = 1;
+  international_center.common.CategoryFilter filter = 2;
+  international_center.common.SortOptions sort = 3;
+  ResearchFilter research_filter = 4;
+}
+
+message GetResearchArticleBySlugRequest {
+  string slug = 1;
+}
+
+message SearchResearchArticlesRequest {
+  string query = 1;
+  international_center.common.PaginationRequest pagination = 2;
+  international_center.common.SortOptions sort = 3;
+  international_center.common.CategoryFilter filter = 4;
+  ResearchFilter research_filter = 5;
+}
+
+message GetResearchCategoriesRequest {
+  bool active_only = 1;
+}
+
+message GetFeaturedResearchRequest {
+  google.protobuf.Int32Value limit = 1;
+}
+
+message GetRecentResearchRequest {
+  int32 limit = 1;
+}
+
+message GetResearchByKeywordRequest {
+  string keyword = 1;
+  international_center.common.PaginationRequest pagination = 2;
+}
+
+message GetResearchByAuthorRequest {
+  string author = 1;
+  international_center.common.PaginationRequest pagination = 2;
+}
+
+// Research-specific filter
+message ResearchFilter {
+  google.protobuf.StringValue research_type = 1;
+  google.protobuf.StringValue journal = 2;
+  google.protobuf.StringValue institution = 3;
+  repeated string keywords = 4;
+  google.protobuf.Timestamp from_date = 5;
+  google.protobuf.Timestamp to_date = 6;
+}
+
+// Response messages
+message GetResearchArticlesResponse {
+  repeated ResearchArticle articles = 1;
+  international_center.common.PaginationResponse pagination = 2;
+}
+
+message GetResearchArticleResponse {
+  ResearchArticle article = 1;
+}
+
+message SearchResearchArticlesResponse {
+  repeated ResearchArticle articles = 1;
+  international_center.common.PaginationResponse pagination = 2;
+  string query = 3;
+}
+
+message GetResearchCategoriesResponse {
+  repeated ResearchCategory categories = 1;
+}
+
+message GetFeaturedResearchResponse {
+  repeated ResearchArticle articles = 1;
+}
+
+message GetRecentResearchResponse {
+  repeated ResearchArticle articles = 1;
+}
+
+message GetResearchByKeywordResponse {
+  repeated ResearchArticle articles = 1;
+  international_center.common.PaginationResponse pagination = 2;
+  string keyword = 3;
+}
+
+message GetResearchByAuthorResponse {
+  repeated ResearchArticle articles = 1;
+  international_center.common.PaginationResponse pagination = 2;
+  string author = 3;
+}
+
+// Research service definition
+service ResearchService {
+  // Get paginated list of research articles with filtering and sorting
+  rpc GetResearchArticles(GetResearchArticlesRequest) returns (GetResearchArticlesResponse);
+  
+  // Get research article by slug
+  rpc GetResearchArticleBySlug(GetResearchArticleBySlugRequest) returns (GetResearchArticleResponse);
+  
+  // Search research articles with full-text search
+  rpc SearchResearchArticles(SearchResearchArticlesRequest) returns (SearchResearchArticlesResponse);
+  
+  // Get research categories
+  rpc GetResearchCategories(GetResearchCategoriesRequest) returns (GetResearchCategoriesResponse);
+  
+  // Get featured research articles
+  rpc GetFeaturedResearch(GetFeaturedResearchRequest) returns (GetFeaturedResearchResponse);
+  
+  // Get recent research articles
+  rpc GetRecentResearch(GetRecentResearchRequest) returns (GetRecentResearchResponse);
+  
+  // Get research by keyword
+  rpc GetResearchByKeyword(GetResearchByKeywordRequest) returns (GetResearchByKeywordResponse);
+  
+  // Get research by author
+  rpc GetResearchByAuthor(GetResearchByAuthorRequest) returns (GetResearchByAuthorResponse);
+  
+  // Stream research articles for real-time updates
+  rpc StreamResearchArticles(GetResearchArticlesRequest) returns (stream ResearchArticle);
+  
+  // Health check
+  rpc HealthCheck(international_center.common.HealthCheckRequest) returns (international_center.common.HealthCheckResponse);
+}

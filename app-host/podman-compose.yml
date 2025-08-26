@@ -1,0 +1,168 @@
+# Podman Compose configuration for International Center Services APIs
+# This file provides Podman-specific optimizations when running outside Aspire orchestration
+# Used for production deployments and local development with direct Podman usage
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: international-center-postgres
+    environment:
+      POSTGRES_DB: database
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      - "5432:5432"
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d database"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    # Podman-specific resource limits for Services APIs
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  redis:
+    image: redis:7-alpine
+    container_name: international-center-redis
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    # Optimized for Services APIs caching requirements
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  services-public-api:
+    image: international-center/services-public-api:latest
+    container_name: international-center-services-public-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;https://+:443
+      - CONTAINER_RUNTIME=podman
+      - OTEL_SERVICE_NAME=InternationalCenter.Services.Public.Api
+      - ConnectionStrings__database=Host=postgres;Database=database;Username=postgres;Password_File=/run/secrets/postgres_password
+      - ConnectionStrings__redis=redis:6379
+    ports:
+      - "8081:80"
+      - "8441:443"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    # Resource allocation for high-performance read operations (Dapper)
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  services-admin-api:
+    image: international-center/services-admin-api:latest
+    container_name: international-center-services-admin-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80;https://+:443
+      - CONTAINER_RUNTIME=podman
+      - OTEL_SERVICE_NAME=InternationalCenter.Services.Admin.Api
+      - MEDICAL_GRADE_AUDIT=true
+      - ZERO_TRUST_SECURITY=true
+      - ConnectionStrings__database=Host=postgres;Database=database;Username=postgres;Password_File=/run/secrets/postgres_password
+      - ConnectionStrings__redis=redis:6379
+    ports:
+      - "8088:80"
+      - "8448:443"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    # Higher resource allocation for admin operations and EF Core writes
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+          cpus: '1.5'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/postgres
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/redis
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+
+networks:
+  default:
+    name: international-center-network
+    driver: bridge
+
+# Podman-specific labels for container management
+x-podman-labels:
+  - "io.podman.compose.project=international-center"
+  - "io.podman.compose.version=1.0"
+  - "org.opencontainers.image.title=International Center Services APIs"
+  - "org.opencontainers.image.description=Medical-grade Services APIs with Podman orchestration"

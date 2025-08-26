@@ -1,0 +1,77 @@
+# Bun configuration for International Center Website
+# Optimized for Astro + Vue + Tailwind + shadcn-vue + Pinia development
+
+[install]
+# Use exact versions for medical-grade dependency consistency
+exact = true
+# Faster installs with hardlinks when possible
+auto = "force"
+# Optional dependencies for faster installs
+optional = true
+# Development dependencies are needed for testing and build tools
+dev = true
+# Use production registry for security and compliance
+registry = "https://registry.npmjs.org"
+# Timeout for package installs (medical-grade reliability)
+timeout = 30000
+
+[install.cache]
+# Enable caching for faster subsequent installs
+dir = "node_modules/.cache/bun"
+# Cache packages globally for better performance across projects
+global = false
+
+[test]
+# Test configuration for Vitest integration
+preload = ["./src/test/setup.ts"]
+# Coverage configuration for medical-grade testing requirements
+coverage = true
+# Run tests in parallel for faster feedback
+parallel = true
+# Timeout for individual tests (fail fast principle)
+timeout = 5000
+
+[run]
+# Environment variables for development and production builds
+env = [
+  "NODE_ENV",
+  "ASPIRE_ENVIRONMENT", 
+  "VITE_API_BASE_URL",
+  "VITE_PUBLIC_GATEWAY_URL"
+]
+# Shell for script execution
+shell = "system"
+# Silent mode for cleaner output
+silent = false
+
+[build]
+# Build optimizations for production
+target = "browser"
+# Source maps for debugging in development
+sourcemap = "external"
+# Minification for production builds
+minify = true
+# Bundle splitting for better caching
+splitting = true
+
+[dev]
+# Hot reload configuration for development server
+hot = true
+# Port for development server (matches Astro config)
+port = 4321
+# Host binding for Docker/Podman compatibility
+host = "0.0.0.0"
+
+[macros]
+# Custom macros for build optimization (if needed)
+
+[loader]
+# Custom file loaders
+".astro" = "text"
+".vue" = "tsx"
+".svg" = "file"
+
+[define]
+# Global defines for build-time optimizations
+"process.env.NODE_ENV" = "production"
+"process.env.ASTRO_BUILD" = "true"

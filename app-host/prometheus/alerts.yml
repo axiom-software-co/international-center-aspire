@@ -1,0 +1,255 @@
+# Prometheus Alerting Rules for International Center Services APIs
+# Medical-grade compliance, performance thresholds, and security anomaly detection
+
+groups:
+  # Medical Compliance Alerts - Critical for regulatory requirements
+  - name: medical_compliance
+    interval: 30s
+    rules:
+      - alert: MedicalComplianceViolation
+        expr: increase(services_admin_api_medical_compliance_violations_total[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          compliance_level: medical_grade
+          category: regulatory
+        annotations:
+          summary: "Medical compliance violation detected"
+          description: "{{ $labels.violation_type }} violation detected for {{ $labels.entity_type }} ({{ $labels.api }})"
+          runbook_url: "https://docs.international-center.app/compliance/violations"
+
+      - alert: AuditLogGenerationFailure
+        expr: increase(services_admin_api_audit_log_errors_total[2m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          compliance_level: medical_grade
+          category: audit
+        annotations:
+          summary: "Audit log generation failure - Medical compliance at risk"
+          description: "Audit log generation failed for {{ $labels.event_type }} on {{ $labels.entity_type }}"
+          runbook_url: "https://docs.international-center.app/compliance/audit-failures"
+
+      - alert: AuditLogHighLatency
+        expr: histogram_quantile(0.95, rate(services_admin_api_audit_log_generation_latency_seconds_bucket[5m])) > 5
+        for: 2m
+        labels:
+          severity: warning
+          compliance_level: medical_grade
+          category: performance
+        annotations:
+          summary: "High audit log generation latency"
+          description: "P95 audit log latency is {{ $value }}s, exceeding 5s threshold"
+          runbook_url: "https://docs.international-center.app/performance/audit-latency"
+
+      - alert: AuditLogBacklogCritical
+        expr: services_admin_api_audit_log_backlog_size > 100
+        for: 1m
+        labels:
+          severity: critical
+          compliance_level: medical_grade
+          category: capacity
+        annotations:
+          summary: "Critical audit log backlog size"
+          description: "Audit log backlog has {{ $value }} entries, exceeding critical threshold of 100"
+          runbook_url: "https://docs.international-center.app/capacity/audit-backlog"
+
+  # Performance Alerts - API response time and throughput
+  - name: api_performance
+    interval: 15s
+    rules:
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(services_public_api_query_duration_seconds_bucket[5m])) > 1
+        for: 2m
+        labels:
+          severity: warning
+          api: services_public
+          category: performance
+        annotations:
+          summary: "High API response latency"
+          description: "P95 response time is {{ $value }}s for {{ $labels.query_type }} queries"
+          runbook_url: "https://docs.international-center.app/performance/latency"
+
+      - alert: HighEFCoreQueryLatency
+        expr: histogram_quantile(0.95, rate(services_admin_api_efcore_query_duration_seconds_bucket[5m])) > 2
+        for: 3m
+        labels:
+          severity: warning
+          api: services_admin
+          category: performance
+          component: efcore
+        annotations:
+          summary: "High EF Core query latency"
+          description: "P95 EF Core {{ $labels.query_type }} query time is {{ $value }}s"
+          runbook_url: "https://docs.international-center.app/performance/efcore"
+
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: services_admin_api_efcore_tracked_entities > 1000
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+          category: capacity
+        annotations:
+          summary: "High EF Core tracked entities count"
+          description: "EF Core is tracking {{ $value }} entities, indicating potential memory leak or connection issues"
+          runbook_url: "https://docs.international-center.app/database/connection-pool"
+
+  # Gateway Performance and Security Alerts
+  - name: gateway_security
+    interval: 10s
+    rules:
+      - alert: HighRateLimitViolations
+        expr: sum(rate(public_gateway_rate_limit_violations_total[2m])) > 10
+        for: 1m
+        labels:
+          severity: warning
+          component: public_gateway
+          category: security
+        annotations:
+          summary: "High rate limit violations detected"
+          description: "{{ $value }} rate limit violations per second on public gateway"
+          runbook_url: "https://docs.international-center.app/security/rate-limiting"
+
+      - alert: AuthenticationFailureSpike
+        expr: sum(rate(admin_gateway_authentication_attempts_total{result="failure"}[2m])) > 5
+        for: 30s
+        labels:
+          severity: critical
+          component: admin_gateway
+          category: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "{{ $value }} authentication failures per second detected - possible attack"
+          runbook_url: "https://docs.international-center.app/security/auth-failures"
+
+      - alert: RBACViolationSpike
+        expr: sum(rate(services_admin_api_rbac_violations_total[2m])) > 2
+        for: 1m
+        labels:
+          severity: warning
+          component: rbac
+          category: security
+        annotations:
+          summary: "RBAC authorization violations detected"
+          description: "{{ $value }} RBAC violations per second for {{ $labels.policy }}"
+          runbook_url: "https://docs.international-center.app/security/rbac-violations"
+
+      - alert: GatewayHighErrorRate
+        expr: sum(rate(public_gateway_requests_total{status_code=~"5.."}[5m])) / sum(rate(public_gateway_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          component: public_gateway
+          category: availability
+        annotations:
+          summary: "High gateway error rate"
+          description: "Gateway error rate is {{ $value | humanizePercentage }}, exceeding 5% threshold"
+          runbook_url: "https://docs.international-center.app/availability/gateway-errors"
+
+  # Infrastructure Health Alerts
+  - name: infrastructure_health
+    interval: 30s
+    rules:
+      - alert: DatabaseTransactionRollbacks
+        expr: sum(rate(services_admin_api_transaction_rollbacks_total[5m])) > 1
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+          category: integrity
+        annotations:
+          summary: "High database transaction rollback rate"
+          description: "{{ $value }} transaction rollbacks per second for {{ $labels.operation_type }}"
+          runbook_url: "https://docs.international-center.app/database/transaction-integrity"
+
+      - alert: DatabaseDeadlockDetected
+        expr: increase(services_admin_api_deadlock_errors_total[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          component: database
+          category: integrity
+        annotations:
+          summary: "Database deadlock detected"
+          description: "Database deadlock occurred during {{ $labels.operation_type }} operation"
+          runbook_url: "https://docs.international-center.app/database/deadlocks"
+
+      - alert: RedisCacheHighLatency
+        expr: histogram_quantile(0.95, rate(public_gateway_redis_operation_duration_seconds_bucket[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: redis
+          category: performance
+        annotations:
+          summary: "High Redis cache latency"
+          description: "P95 Redis {{ $labels.operation }} latency is {{ $value }}s"
+          runbook_url: "https://docs.international-center.app/performance/redis"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 30 seconds"
+          runbook_url: "https://docs.international-center.app/availability/service-down"
+
+  # Business Logic and Data Quality Alerts
+  - name: business_logic
+    interval: 60s
+    rules:
+      - alert: DataValidationErrorSpike
+        expr: sum(rate(services_admin_api_validation_errors_total[10m])) > 5
+        for: 3m
+        labels:
+          severity: warning
+          category: data_quality
+          component: validation
+        annotations:
+          summary: "High data validation error rate"
+          description: "{{ $value }} validation errors per second for {{ $labels.entity_type }}.{{ $labels.field }}"
+          runbook_url: "https://docs.international-center.app/data-quality/validation"
+
+      - alert: UnusualDataMutationPattern
+        expr: sum(rate(services_admin_api_service_deletes_total[1h])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: data_integrity
+          component: business_logic
+        annotations:
+          summary: "Unusual data deletion pattern detected"
+          description: "{{ $value }} service deletions per second - higher than normal"
+          runbook_url: "https://docs.international-center.app/business-logic/unusual-patterns"
+
+  # Capacity and Resource Alerts
+  - name: capacity_planning
+    interval: 60s
+    rules:
+      - alert: HighRequestVolume
+        expr: sum(rate(public_gateway_requests_total[1m])) > 800
+        for: 2m
+        labels:
+          severity: warning
+          category: capacity
+          component: public_gateway
+        annotations:
+          summary: "High request volume approaching rate limit"
+          description: "Request rate is {{ $value }} req/sec, approaching 1000 req/min limit"
+          runbook_url: "https://docs.international-center.app/capacity/scaling"
+
+      - alert: AdminGatewayCapacityWarning
+        expr: sum(rate(admin_gateway_requests_total[1m])) > 80
+        for: 3m
+        labels:
+          severity: warning
+          category: capacity
+          component: admin_gateway
+        annotations:
+          summary: "Admin gateway approaching capacity limits"
+          description: "Admin request rate is {{ $value }} req/sec, approaching 100 req/min limit"
+          runbook_url: "https://docs.international-center.app/capacity/admin-scaling"

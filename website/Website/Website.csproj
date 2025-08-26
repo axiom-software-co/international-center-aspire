@@ -1,0 +1,93 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ValidateOnBuild>true</ValidateOnBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <SpaRoot>.</SpaRoot>
+    <DefaultItemExcludes>$(DefaultItemExcludes);node_modules\**;dist\**</DefaultItemExcludes>
+    <GenerateStaticWebAssetsManifest>false</GenerateStaticWebAssetsManifest>
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="astro.config.mjs" />
+    <Content Include="eslint.config.js" />
+    <Content Include="bunfig.toml" Condition="Exists('bunfig.toml')" />
+    <Content Include="bun.lockb" Condition="Exists('bun.lockb')" />
+  </ItemGroup>
+
+  <!-- Bun Runtime Integration for Development and Production -->
+  <Target Name="CheckBunInstalled" BeforeTargets="RestoreFrontend">
+    <Exec Command="bun --version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="BunExitCode" />
+    </Exec>
+    <Message Text="✅ Bun runtime detected" Condition="'$(BunExitCode)' == '0'" />
+    <Error Text="❌ Bun runtime not found. Please install bun: https://bun.sh/" Condition="'$(BunExitCode)' != '0'" />
+  </Target>
+
+  <!-- Frontend Package Restoration using Bun -->
+  <Target Name="RestoreFrontend" BeforeTargets="Build" DependsOnTargets="CheckBunInstalled">
+    <Message Text="🔧 Restoring frontend packages with bun..." Importance="high" />
+    <Exec Command="bun install --frozen-lockfile" 
+          ContinueOnError="false" 
+          IgnoreExitCode="false" />
+  </Target>
+
+  <!-- Development Build Target -->
+  <Target Name="BuildFrontendDevelopment" BeforeTargets="Build" Condition="'$(Configuration)' == 'Debug'" DependsOnTargets="RestoreFrontend">
+    <Message Text="🏗️ Building Astro frontend for development..." Importance="high" />
+    <Exec Command="bun run build" 
+          ContinueOnError="false"
+          EnvironmentVariables="NODE_ENV=development;ASPIRE_ENVIRONMENT=Development" />
+  </Target>
+
+  <!-- Production Build Target -->
+  <Target Name="BuildFrontendProduction" BeforeTargets="Build" Condition="'$(Configuration)' == 'Release'" DependsOnTargets="RestoreFrontend">
+    <Message Text="🚀 Building Astro frontend for production..." Importance="high" />
+    <Exec Command="bun run build" 
+          ContinueOnError="false"
+          EnvironmentVariables="NODE_ENV=production;ASPIRE_ENVIRONMENT=Production" />
+    <Message Text="🎯 Frontend production build completed successfully" Importance="high" />
+  </Target>
+
+  <!-- Static Asset Integration -->
+  <Target Name="IncludeAstroAssets" BeforeTargets="Build" DependsOnTargets="BuildFrontendDevelopment;BuildFrontendProduction">
+    <Message Text="📦 Copying Astro static assets to wwwroot..." Importance="high" />
+    <ItemGroup>
+      <DistFiles Include="dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DistFiles)" 
+          DestinationFiles="@(DistFiles->'wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" 
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Development Server Integration -->
+  <Target Name="StartDevServer" Condition="'$(ASPNETCORE_ENVIRONMENT)' == 'Development'" BeforeTargets="Build">
+    <Message Text="🔥 Development server integration ready - use 'bun run dev' for frontend hot reload" Importance="high" />
+  </Target>
+
+  <!-- Clean Target for Frontend Assets -->
+  <Target Name="CleanFrontend" BeforeTargets="Clean">
+    <Message Text="🧹 Cleaning frontend build artifacts..." Importance="high" />
+    <RemoveDir Directories="dist;node_modules\.cache" ContinueOnError="true" />
+  </Target>
+
+  <!-- Publish Target for Production Deployment -->
+  <Target Name="PublishFrontend" BeforeTargets="Publish" DependsOnTargets="BuildFrontendProduction">
+    <Message Text="📋 Publishing frontend assets for deployment..." Importance="high" />
+    <ItemGroup>
+      <DistFiles Include="dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DistFiles)" 
+          DestinationFiles="@(DistFiles->'$(PublishUrl)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
+</Project>

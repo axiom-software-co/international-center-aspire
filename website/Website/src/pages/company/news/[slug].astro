@@ -1,0 +1,34 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import DynamicNewsArticlePage from '../../../components/blocks/DynamicNewsArticlePage.vue';
+
+// Static path generation for news article pages
+// NOTE: News domain is on hold - returning empty paths until REST implementation is available
+export async function getStaticPaths() {
+  console.log('🏗️ [Build] News domain is on hold - no news article pages generated');
+  // Return empty array since news domain is on hold
+  return [];
+}
+
+// Get the current page data
+const { slug } = Astro.params;
+const { articleTitle, articleDescription } = Astro.props;
+
+if (!slug) {
+  throw new Error('News article slug is required');
+}
+
+// Generate SEO-friendly metadata
+const finalTitle = articleTitle || 'News Article';
+const pageTitle = `${finalTitle} - International Center | Latest News`;
+const pageDescription = articleDescription || "Stay informed with the latest news and insights in regenerative medicine.";
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+>
+  <main>
+    <DynamicNewsArticlePage client:only="vue" />
+  </main>
+</Layout>

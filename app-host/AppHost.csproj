@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ValidateOnBuild>true</ValidateOnBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>1826311b-9e06-4ac9-95e8-5a5504ba751f</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\infrastructure-database\Infrastructure.Database.Migrations.Service\Infrastructure.Database.Migrations.Service.csproj" />
+    <ProjectReference Include="..\domain-services\Services.Public.Api\Services.Public.Api\Services.Public.Api.csproj" />
+    <ProjectReference Include="..\domain-services\Services.Admin.Api\Services.Admin.Api\Services.Admin.Api.csproj" />
+    <ProjectReference Include="..\gateway-public\Gateway.Public\Gateway.Public.csproj" />
+    <ProjectReference Include="..\gateway-admin\Gateway.Admin\Gateway.Admin.csproj" />
+    <ProjectReference Include="..\website\Website\Website.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <PackageReference Include="Aspire.Hosting.Redis" />
+    <PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Bun" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="podman-compose.yml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="containers.conf" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="setup-podman-aspire.sh" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

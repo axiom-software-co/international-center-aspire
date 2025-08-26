@@ -1,0 +1,121 @@
+# Prometheus configuration for International Center Services APIs
+# Auto-generated scrape targets for Services Public API, Services Admin API, and Gateway monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: 'international-center'
+    environment: 'development'
+
+# Alertmanager configuration (for production alerting)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'
+rule_files:
+  - "alerts.yml"
+
+# Scrape configuration for Services APIs and Gateways
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          component: 'monitoring'
+
+  # Services Public API metrics - Anonymous public access patterns
+  - job_name: 'services-public-api'
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['services-public-api:80']
+        labels:
+          service: 'services-public-api'
+          api_type: 'public'
+          access_type: 'anonymous'
+          component: 'domain-api'
+          compliance_level: 'standard'
+
+  # Services Admin API metrics - Medical-grade compliance monitoring
+  - job_name: 'services-admin-api'
+    scrape_interval: 10s
+    scrape_timeout: 10s
+    metrics_path: '/admin/api/metrics'
+    static_configs:
+      - targets: ['services-admin-api:80']
+        labels:
+          service: 'services-admin-api'
+          api_type: 'admin'
+          access_type: 'authenticated'
+          component: 'domain-api'
+          compliance_level: 'medical_grade'
+
+  # Public Gateway metrics - High-volume anonymous traffic monitoring
+  - job_name: 'public-gateway'
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['public-gateway:80']
+        labels:
+          service: 'public-gateway'
+          component: 'gateway'
+          access_type: 'anonymous'
+          rate_limit: '1000_per_minute'
+          redis_backed: 'true'
+
+  # Admin Gateway metrics - Medical-grade compliance and RBAC monitoring
+  - job_name: 'admin-gateway'
+    scrape_interval: 10s
+    scrape_timeout: 10s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['admin-gateway:80']
+        labels:
+          service: 'admin-gateway'
+          component: 'gateway'
+          access_type: 'rbac_authenticated'
+          rate_limit: '100_per_minute'
+          compliance_level: 'medical_grade'
+          auth_provider: 'entra_external_id'
+
+  # PostgreSQL metrics (if postgres_exporter is available)
+  # - job_name: 'postgresql'
+  #   scrape_interval: 30s
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #       labels:
+  #         service: 'postgresql'
+  #         component: 'database'
+
+  # Redis metrics (if redis_exporter is available)
+  # - job_name: 'redis'
+  #   scrape_interval: 30s
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: 'redis'
+  #         component: 'cache'
+
+  # Development: Additional .NET metrics from Aspire
+  - job_name: 'dotnet-aspire-metrics'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: 
+          - 'services-public-api:80'
+          - 'services-admin-api:80'
+          - 'public-gateway:80'
+          - 'admin-gateway:80'
+        labels:
+          component: 'aspire-runtime'
+          framework: 'dotnet'
+          version: 'net9'

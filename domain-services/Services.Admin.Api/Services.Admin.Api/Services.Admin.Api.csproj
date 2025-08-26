@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ValidateOnBuild>true</ValidateOnBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
+    <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.Identity.Web" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+    <PackageReference Include="FluentValidation.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Services.Shared\Services.Shared\Services.Shared.csproj" />
+    <ProjectReference Include="..\..\..\Domain.Shared\Domain.Shared\Domain.Shared.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure.Database\Infrastructure.Database\Infrastructure.Database.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure.Cache\Infrastructure.Cache\Infrastructure.Cache.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure.Identity\Infrastructure.Identity\Infrastructure.Identity.csproj" />
+    <ProjectReference Include="..\..\..\infrastructure-metrics\Infrastructure.Metrics\Infrastructure.Metrics.csproj" />
+    <ProjectReference Include="..\..\..\service-audit\Service.Audit.csproj" />
+  </ItemGroup>
+
+</Project>

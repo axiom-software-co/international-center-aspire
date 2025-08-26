@@ -1,0 +1,6 @@
+import{c as n}from"./createLucideIcon.DG0ClXWm.js";import{t as a,a as i,c as s}from"./utils.CPYLdFy8.js";import{d as c,c as l,o as p,X as u}from"./vue.runtime.esm-bundler.HDkGvW5c.js";import{_ as f}from"./_plugin-vue_export-helper.DlAUqK2U.js";/**
+ * @license lucide-vue-next v0.540.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const b=n("clock",[["path",{d:"M12 6v6l4 2",key:"mmk7yg"}],["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}]]);function x(...e){return a(i(e))}const m=c({__name:"Separator",props:{orientation:{type:String,required:!1,default:"horizontal"},decorative:{type:Boolean,required:!1,default:!0},class:{type:String,required:!1}},setup(e,{expose:o}){o();const r={props:e,get cn(){return s}};return Object.defineProperty(r,"__isScriptSetup",{enumerable:!1,value:!0}),r}}),_=["role","aria-orientation"];function d(e,o,t,r,h,k){return p(),l("div",u({class:r.cn("shrink-0 bg-border",t.orientation==="horizontal"?"h-[1px] w-full":"h-full w-[1px]",r.props.class),role:t.decorative?"none":"separator","aria-orientation":t.orientation},e.$attrs),null,16,_)}const w=f(m,[["render",d],["__file","/home/tojkuv/Documents/GitHub/international-center/international-center-aspire/website/Website/src/components/vue-ui/Separator.vue"]]);export{b as C,w as S,x as c};

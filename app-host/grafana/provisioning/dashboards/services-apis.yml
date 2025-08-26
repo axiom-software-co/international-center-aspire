@@ -1,0 +1,55 @@
+# Grafana dashboard provisioning for International Center Services APIs
+# Automatically loads pre-built dashboards for Infrastructure, Gateway, Domain, and Compliance monitoring
+
+apiVersion: 1
+
+providers:
+  - name: 'Services APIs Dashboards'
+    orgId: 1
+    folder: 'International Center'
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
+
+  - name: 'Infrastructure Dashboards'
+    orgId: 1
+    folder: 'Infrastructure'
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/infrastructure
+
+  - name: 'Gateway Dashboards'
+    orgId: 1
+    folder: 'Gateways'
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/gateways
+
+  - name: 'Domain Dashboards'
+    orgId: 1
+    folder: 'Domain APIs'
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/domain
+
+  - name: 'Compliance Dashboards'
+    orgId: 1
+    folder: 'Medical Compliance'
+    type: file
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/compliance

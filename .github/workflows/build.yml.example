@@ -1,0 +1,72 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Required for git history and SHA
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Generate Version
+      run: |
+        chmod +x ./scripts/generate-version.sh
+        ./scripts/generate-version.sh ${{ github.run_number }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal
+
+    - name: Publish APIs
+      run: |
+        dotnet publish InternationalCenter.Services.Public.Api --configuration Release --output ./publish/services-public
+        dotnet publish InternationalCenter.Services.Admin.Api --configuration Release --output ./publish/services-admin
+        dotnet publish InternationalCenter.Contacts.Api --configuration Release --output ./publish/contacts
+        dotnet publish InternationalCenter.Events.Api --configuration Release --output ./publish/events
+        dotnet publish InternationalCenter.News.Api --configuration Release --output ./publish/news
+        dotnet publish InternationalCenter.Newsletter.Api --configuration Release --output ./publish/newsletter
+        dotnet publish InternationalCenter.Research.Api --configuration Release --output ./publish/research
+        dotnet publish InternationalCenter.Search.Api --configuration Release --output ./publish/search
+
+    - name: Copy version files to published outputs
+      run: |
+        cp InternationalCenter.Services.Public.Api/version.txt ./publish/services-public/
+        cp InternationalCenter.Services.Admin.Api/version.txt ./publish/services-admin/
+        cp InternationalCenter.Contacts.Api/version.txt ./publish/contacts/
+        cp InternationalCenter.Events.Api/version.txt ./publish/events/
+        cp InternationalCenter.News.Api/version.txt ./publish/news/
+        cp InternationalCenter.Newsletter.Api/version.txt ./publish/newsletter/
+        cp InternationalCenter.Research.Api/version.txt ./publish/research/
+        cp InternationalCenter.Search.Api/version.txt ./publish/search/
+
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: published-apis
+        path: ./publish/
+
+    # Additional deployment steps would go here
+    # - Container building
+    # - Deployment to staging/production
+    # - Database migrations
+    # etc.

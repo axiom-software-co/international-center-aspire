@@ -1,0 +1,72 @@
+# Grafana datasource provisioning for International Center Services APIs
+# Automatically configures Prometheus as the primary data source
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+      prometheusType: Prometheus
+      prometheusVersion: 2.40.0
+      cacheLevel: 'High'
+      disableMetricsLookup: false
+      customQueryParameters: ''
+      timeInterval: '5s'
+      queryTimeout: '60s'
+      defaultEditor: 'code'
+    secureJsonData: {}
+
+  # Optional: Tempo for distributed tracing (if available)
+  # - name: Tempo
+  #   type: tempo
+  #   access: proxy
+  #   url: http://tempo:3200
+  #   uid: tempo
+  #   editable: false
+  #   jsonData:
+  #     httpMethod: GET
+  #     tracesToLogs:
+  #       datasourceUid: 'loki'
+  #       tags: ['job', 'instance', 'pod', 'namespace']
+  #       mappedTags: [{ key: 'service.name', value: 'service' }]
+  #       mapTagNamesEnabled: false
+  #       spanStartTimeShift: '1h'
+  #       spanEndTimeShift: '1h'
+  #     tracesToMetrics:
+  #       datasourceUid: 'prometheus'
+  #       tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+  #       queries:
+  #         - name: 'Sample query'
+  #           query: 'sum(rate(traces_spanmetrics_latency_bucket{$__tags}[5m]))'
+  #     serviceMap:
+  #       datasourceUid: 'prometheus'
+  #     search:
+  #       hide: false
+  #     nodeGraph:
+  #       enabled: true
+  #     lokiSearch:
+  #       datasourceUid: 'loki'
+
+  # Optional: Loki for log aggregation (if available)
+  # - name: Loki
+  #   type: loki
+  #   access: proxy
+  #   url: http://loki:3100
+  #   uid: loki
+  #   editable: false
+  #   jsonData:
+  #     maxLines: 1000
+  #     derivedFields:
+  #       - datasourceUid: tempo
+  #         matcherRegex: '(?:trace_id)=(\w+)'
+  #         name: TraceID
+  #         url: '$${__value.raw}'
